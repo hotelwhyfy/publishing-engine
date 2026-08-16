@@ -1,0 +1,67 @@
+# A worked example. Copy this directory to start a book:
+#     publish new my-book
+# then build it with:
+#     publish build my-book
+
+[book]
+title       = "The Kitchen Garden"
+subtitle    = "Notes on a Small Bed in a Cold Climate"
+slug        = "kitchen-garden"
+imprint     = "Example Press"
+template    = "prose"
+content     = "content.md"
+title_lines = ["THE KITCHEN", "GARDEN"]
+tagline     = "Four square metres, one season, and everything that can be learned from it."
+
+# Optional. Omit the whole table for a standalone book.
+[series]
+label  = "Working Notes"
+volume = 1
+
+[print]
+cover_bg  = "0d1410"
+min_pages = 24
+
+# Omit [[print.trims]] entirely to get the default pair: a 5x8 perfect-bound
+# paperback and a 5.5x8.5 case-bound hardcover. Both are spelled out here so the
+# example shows every field that a trim accepts.
+[[print.trims]]
+name = "paperback"
+width = 5.0
+height = 8.0
+binding = "wrap"
+spine_per_page = 0.002347
+
+[[print.trims]]
+name = "hardcover"
+width = 5.5
+height = 8.5
+binding = "case"
+spine_per_page = 0.002252
+spine_extra = 0.06
+wrap = 0.625
+hinge = 0.375
+
+[isbn]
+paperback = ""
+hardcover = ""
+
+[theme]
+paper    = "f2efe4"
+ink      = "1b1f1a"
+accent   = "3f6b44"
+accent2  = "a8802e"
+mute     = "78766c"
+backdrop = "10160f"
+
+[epigraph]
+lines = ["A bed you can reach across is a bed you will actually weed."]
+
+[description]
+body = """
+Four square metres, dug in a cold spring, and a season spent finding out what that is
+enough for. What went in, when, and in what order. What came up. What did not, and the
+best guess as to why.
+
+An example book, included so the engine has something to build.
+"""

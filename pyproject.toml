@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "publishing-engine"
+version = "0.1.0"
+description = "Build print-ready book interiors, cover wraps and reading HTML from one config file."
+readme = "README.md"
+requires-python = ">=3.11"
+keywords = ["publishing", "typesetting", "pdf", "print-on-demand", "book"]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: End Users/Desktop",
+  "Programming Language :: Python :: 3",
+  "Topic :: Printing",
+  "Topic :: Text Processing :: Markup",
+]
+dependencies = [
+  "reportlab>=4.0",
+  "cairosvg>=2.7",
+  "pikepdf>=8.0",
+  "pillow>=10.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=7.4", "pymupdf>=1.24"]
+
+[project.scripts]
+publish = "publishing_engine.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["publishing_engine*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

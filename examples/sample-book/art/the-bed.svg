@@ -1,0 +1,57 @@
+<svg viewBox="0 0 600 440" xmlns="http://www.w3.org/2000/svg">
+  <rect width="600" height="440" fill="#f2efe4"/>
+
+  <text x="300" y="28" text-anchor="middle" font-family="Georgia,serif" font-size="12.5"
+        letter-spacing="5" fill="#3f6b44">THE BED, AND THE REACH</text>
+
+  <!-- the standing room -->
+  <rect x="150" y="60" width="300" height="240" fill="#eae7d8" stroke="#c9c3b0"
+        stroke-width="1" stroke-dasharray="5 5"/>
+  <!-- the bed itself -->
+  <rect x="186" y="96" width="228" height="168" fill="#e3ddc8" stroke="#3f6b44" stroke-width="1.6"/>
+
+  <!-- rows -->
+  <g stroke="#a8802e" stroke-width="0.9">
+    <line x1="186" y1="138" x2="414" y2="138"/>
+    <line x1="186" y1="180" x2="414" y2="180"/>
+    <line x1="186" y1="222" x2="414" y2="222"/>
+  </g>
+  <g fill="#3f6b44">
+    <circle cx="212" cy="117" r="3"/><circle cx="262" cy="117" r="3"/>
+    <circle cx="312" cy="117" r="3"/><circle cx="362" cy="117" r="3"/>
+    <circle cx="212" cy="159" r="3"/><circle cx="262" cy="159" r="3"/>
+    <circle cx="312" cy="159" r="3"/><circle cx="362" cy="159" r="3"/>
+    <circle cx="212" cy="201" r="3"/><circle cx="262" cy="201" r="3"/>
+    <circle cx="312" cy="201" r="3"/><circle cx="362" cy="201" r="3"/>
+    <circle cx="212" cy="243" r="3"/><circle cx="262" cy="243" r="3"/>
+    <circle cx="312" cy="243" r="3"/><circle cx="362" cy="243" r="3"/>
+  </g>
+
+  <!-- the reach, from each long side to the middle -->
+  <g stroke="#8a3b2a" stroke-width="1.2">
+    <line x1="186" y1="180" x2="296" y2="180"/>
+    <path d="M186,180 l9,-4 v8 Z" fill="#8a3b2a" stroke="none"/>
+    <line x1="414" y1="180" x2="304" y2="180"/>
+    <path d="M414,180 l-9,-4 v8 Z" fill="#8a3b2a" stroke="none"/>
+  </g>
+  <text x="300" y="174" text-anchor="middle" font-family="Georgia,serif" font-size="10" fill="#8a3b2a">an arm from either side</text>
+
+  <!-- dimension -->
+  <g stroke="#78766c" stroke-width="0.8">
+    <line x1="186" y1="286" x2="414" y2="286"/>
+    <line x1="186" y1="282" x2="186" y2="290"/><line x1="414" y1="282" x2="414" y2="290"/>
+  </g>
+  <text x="300" y="302" text-anchor="middle" font-family="Georgia,serif" font-size="10" fill="#78766c">two metres</text>
+  <text x="300" y="76" text-anchor="middle" font-family="Georgia,serif" font-size="10" fill="#78766c">standing room on all four sides</text>
+
+  <!-- the buried turf, in section -->
+  <line x1="150" y1="336" x2="450" y2="336" stroke="#78766c" stroke-width="0.9"/>
+  <rect x="150" y="336" width="300" height="46" fill="#e6e0cd" stroke="#c9c3b0" stroke-width="0.9"/>
+  <rect x="150" y="366" width="300" height="16" fill="#cfd8c2" stroke="#3f6b44" stroke-width="0.9"/>
+  <text x="462" y="352" font-family="Georgia,serif" font-size="9.5" fill="#78766c">the root run</text>
+  <text x="462" y="378" font-family="Georgia,serif" font-size="9.5" fill="#3f6b44">turf, inverted</text>
+
+  <line x1="40" y1="404" x2="560" y2="404" stroke="#c9c3b0" stroke-width="0.9"/>
+  <text x="40" y="424" font-family="Georgia,serif" font-size="10.5" fill="#1b1f1a">Every square of it is an arm&#8217;s length from somewhere you can stand, which is the whole argument</text>
+  <text x="40" y="438" font-family="Georgia,serif" font-size="10.5" fill="#1b1f1a">for a small bed over a large one.</text>
+</svg>

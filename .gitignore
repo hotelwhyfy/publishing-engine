@@ -1,0 +1,12 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.venv/
+venv/
+.pytest_cache/
+.DS_Store
+
+# built artefacts live beside the book that produced them
+examples/**/dist/
