@@ -16,7 +16,8 @@ publish build my-book
 ```
 
 Nothing about any particular book lives in the engine. The title, the colours, the
-trims, the figures and the words all come from the book's own directory.
+trims, the figures and the words all come from the book's own directory — so books are
+kept in their own repository and this one stays a tool.
 
 ---
 
@@ -73,6 +74,12 @@ publish list                    # what is here
 publish build                   # all of them
 publish build short-manual      # by slug
 publish build series-two/       # by path fragment
+```
+
+Point `--root` at wherever the books are kept:
+
+```bash
+publish build --root ../my-books
 ```
 
 ---
@@ -402,3 +409,7 @@ pytest
 The suite covers config loading, the content parsers, the markup, the colour helpers,
 and an end-to-end build of the example book — checking page counts, page geometry,
 cover width against the computed spine, and that every font in every output is embedded.
+
+[`CONTEXT.md`](CONTEXT.md) has the architecture, the contracts a template and a figure
+module must honour, the page geometry every template shares, and the rendering gotchas
+worth knowing before you spend an afternoon on one.
