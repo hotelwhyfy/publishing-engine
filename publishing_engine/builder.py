@@ -42,7 +42,8 @@ def listing_text(book) -> str:
     isbn = book.isbn.get(book.primary().name)
     head.append(f"ISBN: {isbn} ({book.primary().name})" if isbn else "ISBN: forthcoming")
 
-    editions = ", ".join(f"{t.name} ({t.width:g} x {t.height:g} in)" for t in book.trims)
+    named = [f"{t.name} ({t.width:g} x {t.height:g} in)" for t in book.trims]
+    editions = " and ".join(named) if len(named) < 3 else f"{', '.join(named[:-1])} and {named[-1]}"
     head.append(f"Editions: {editions}")
     head.append("")
     if book.tagline:

@@ -55,7 +55,8 @@ config.load(dir) ─► Book ─┬─► templates.<name>.build_pdf  ─► int
 | `fonts.py` | Font registration, metrics, and the wrapping and fitting helpers. |
 | `raster.py` | SVG to PNG. The only module that calls cairosvg. |
 | `pdftools.py` | Font-embedding hygiene on finished PDFs. The only module that calls pikepdf. |
-| `figures.py` | Load a book's computed-figure module. |
+| `figures.py` | Resolve a figure by name: a declaration first, a book's own module second. |
+| `plotting/` | Draw a declared figure. `expr` evaluates expressions under a whitelist, `scale` maps data to the page and picks ticks, `svg` writes the document, `draw` assembles it. |
 | `palette.py`, `numbers.py` | Small pure helpers — colour arithmetic, numbers as words and numerals. |
 | `cli.py` | Argument parsing only. No logic that is not also reachable from the API. |
 
@@ -86,6 +87,10 @@ per trim will produce covers sized from the fallback in `[print].pages`.
 figure_svg(name) -> str     # a complete SVG document
 aspect(name)     -> float   # width / height
 ```
+
+**Figure source** — `figures.for_book(book)` answers `svg(name)` and `aspect(name)`
+from whichever source defines the name, declaration first. Templates go through it and
+never load a module themselves.
 
 **Frame** — anything with an `inner_inset` attribute and a `__call__(sheet, folio)`.
 `inner_inset` is what `Sheet.safe_width()` measures from, so a frame that draws a rule at
@@ -199,6 +204,11 @@ weight is unaffected, as are reportlab interiors and HTML — this is SVG art on
 keep italic SVG text free of the letter `f`, or set it in regular weight with a
 `skewX(-12)` transform to keep the slant.
 
+**Never set SVG text in a real italic.** The same rasteriser bug is why
+`plotting.svg.text` takes `slant=True` — a `skewX` transform — rather than
+`font-style="italic"`. Mathematical labels are mostly `f`s; a real italic wrecks them.
+There is a test asserting no figure emits `font-style`.
+
 **SVG text does not wrap.** Nothing in an SVG figure reflows, so a long string will run
 past the artwork margin or under a panel. Figures are also scaled down when placed, so
 9-unit text on a 600-unit canvas lands at roughly 4pt in print. Check the rendered page,
@@ -234,11 +244,32 @@ pytest
 
 - `test_config.py` — loading, defaults, aliases, trims, theme derivation, discovery.
 - `test_content.py` — the parsers, the markup, numbers, colour. Pure and fast.
+- `test_plotting.py` — expressions (including a battery of unsafe ones that must be
+  refused), tick selection, and that each layer and series type draws something.
+- `test_figures.py` — which source a figure name resolves to.
 - `test_build.py` — an end-to-end build of the example: page counts, page geometry,
   cover width against the computed spine, HTML contents, and font embedding.
 
 Add a config or parser test for every new key or block type. Add an assertion to
 `test_build.py` for anything that must be true of the finished artefact.
+
+---
+
+## Declared figures
+
+A book should not need a programmer to get a graph. Anything a maths or science volume
+commonly needs belongs in `plotting/` as a declarative option, not in a book's own
+Python. The module escape hatch stays for genuinely bespoke artwork, but reach for it
+last — if a book has to write code to draw something ordinary, that is a gap in
+`plotting/`.
+
+Two rules for that package:
+
+- **Expressions are never evaluated, only walked.** `expr.py` whitelists node types,
+  names and functions. Widening it is a security decision, not a convenience one.
+- **Everything is themed.** A figure takes its colours from the book's `[theme]`, so it
+  sits in the book rather than on it. No literal colour belongs in `draw.py` outside the
+  theme lookup.
 
 ---
 

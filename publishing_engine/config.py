@@ -132,7 +132,8 @@ class Book:
     isbn: dict = field(default_factory=dict)
     epigraph: dict = field(default_factory=dict)
     description: str = ""
-    graphs: str = ""
+    figures: dict = field(default_factory=dict)   # declared [[figure]] tables, by name
+    graphs: str = ""                              # a figure module, for computed artwork
     closing: str = "Here ends {title}."
 
     raw: dict = field(default_factory=dict)
@@ -215,6 +216,19 @@ def _trims_from(raw: dict, bleed: float) -> list[Trim]:
     return out
 
 
+def _figures_from(raw: dict) -> dict:
+    """Index the ``[[figure]]`` tables by name."""
+    out = {}
+    for spec in raw.get("figure", []):
+        name = spec.get("name")
+        if not name:
+            raise ConfigError("every [[figure]] needs a name")
+        if name in out:
+            raise ConfigError(f"two figures are named '{name}'")
+        out[name] = spec
+    return out
+
+
 def load(directory: str) -> Book:
     """Load the book in *directory*. Raises :class:`ConfigError` if there is none."""
     path = find_config(directory)
@@ -269,7 +283,8 @@ def load(directory: str) -> Book:
         isbn=raw.get("isbn") or book.get("isbn") or {},
         epigraph=raw.get("epigraph") or {},
         description=(raw.get("description") or {}).get("body", ""),
-        graphs=book.get("graphs", ""),
+        figures=_figures_from(raw),
+        graphs=book.get("figures") or book.get("graphs", ""),
         closing=book.get("closing", "Here ends {title}."),
         raw=raw,
     )

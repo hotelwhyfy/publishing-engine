@@ -257,10 +257,134 @@ blocks = [
 ]
 ```
 
-#### Figures
+---
 
-An atlas book draws its own figures. `figures` names a Python file beside the config,
-or any importable module, exposing two functions:
+## Figures
+
+Graphs and charts are declared in the config and drawn by the engine, in the book's own
+colours. No plotting library, and no code.
+
+```toml
+[[figure]]
+name   = "limit"
+x      = [-1, 3]
+xlabel = "x"
+ylabel = "y"
+
+[[figure.curve]]
+of    = "(x^2 - 1)/(x - 1)"
+holes = [1]                   # break the line here, and mark the value it approaches
+
+[[figure.point]]
+at    = [1, 2]
+style = "open"
+label = "L = 2"
+```
+
+Use it from an atlas entry as `figure = "limit"`, or from prose or verse content as an
+image whose source is the figure's name:
+
+```markdown
+![What the figure shows.](plot:limit)
+```
+
+In print it is rasterised like any other figure; in the reading HTML it is embedded as
+inline SVG, so the file stays self-contained.
+
+### Figure options
+
+```toml
+[[figure]]
+name   = "..."      # required, and unique within the book
+kind   = "plot"     # plot (curves from expressions) | chart (data series)
+aspect = 1.6        # width / height
+x      = [-5, 5]    # range; or a list of category names for a chart
+y      = [0, 10]    # range; worked out from the data if omitted
+xlabel = ""
+ylabel = ""
+title  = ""
+grid   = true
+axes   = true       # axes through zero; false draws a box instead
+xticks = 6          # roughly how many ticks to aim for
+yticks = 5
+```
+
+### Layers for `kind = "plot"`
+
+Any number of each, drawn in this order — shading, then curves, then marks.
+
+```toml
+[[figure.curve]]                  # a function
+of    = "sin(x)"
+label = "sin x"                   # adds a legend entry
+holes = [1]                       # removable discontinuities
+dash  = false
+color = "accent"                  # a theme name or a hex value
+width = 2.0
+
+[[figure.area]]                   # shading between a curve and something
+of      = "x^2"
+from    = 0.5
+to      = 2
+under   = "0"                     # the other boundary; the x axis by default
+opacity = 0.16
+label   = "∫"
+
+[[figure.point]]                  # a marked point
+at    = [1, 2]
+style = "filled"                  # filled | open
+label = ""
+
+[[figure.line]]                   # a reference line
+y     = 2                         # horizontal; use x = 1 for vertical
+dash  = true
+label = ""
+
+[[figure.tangent]]                # the tangent to a curve at a point
+of    = "x^2"
+at    = 1.5
+reach = 0.22                      # how far it extends, as a share of the x range
+label = ""
+
+[[figure.note]]                   # free text at a data coordinate
+at   = [1.4, 3.4]
+text = "approaches 2"
+```
+
+### Layers for `kind = "chart"`
+
+```toml
+[[figure.series]]
+type   = "bar"                    # bar | line | scatter | step
+values = [31, 36, 29, 38, 33, 33]
+at     = []                       # x positions; indices or categories by default
+label  = ""
+color  = "accent"
+points = false                    # line only: mark each value
+dash   = false
+```
+
+### Expressions
+
+`+ - * / % //`, `^` for powers, brackets, and comparisons. Piecewise definitions work
+through a conditional: `"x if x > 0 else -x"`. Available functions are `sin cos tan asin
+acos atan atan2 sinh cosh tanh exp log ln log10 log2 sqrt hypot abs floor ceil round min
+max pow copysign degrees radians erf gamma factorial`, and the constants `pi e tau inf`.
+
+Expressions are parsed and walked under a whitelist rather than evaluated, so a config
+file cannot reach outside that list.
+
+### Computed figures
+
+For artwork that genuinely has to be generated rather than declared, a book can name a
+Python module instead:
+
+```toml
+[book]
+figures = "figures.py"          # a file beside the config, or an importable module
+```
+
+supplying:
 
 ```python
 def figure_svg(name: str) -> str:
@@ -270,8 +394,7 @@ def aspect(name: str) -> float:
     """Return its width divided by its height."""
 ```
 
-The engine calls those and rasterises the result. It knows nothing else about how a
-figure is produced.
+A book may use both. A declared figure wins if the two define the same name.
 
 ---
 

@@ -47,6 +47,8 @@ they are worth eating, and then none at all.
 **Runner beans**, the last week of May, once the frosts had genuinely finished, up a
 frame of four canes tied at the top.
 
+![The same quantity of seed, sown two ways. A metre of radish sown on one day gives a glut in the third week that no household can eat, and then nothing. The same seed in four short rows a fortnight apart gives a smaller number every week for two months. Nothing about the growing changed — only the dates.](plot:radish)
+
 # What It Taught
 Three things, and only the third was a surprise.
 

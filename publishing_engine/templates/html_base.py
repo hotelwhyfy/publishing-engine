@@ -33,7 +33,7 @@ def base_css(theme):
     font-size:.7rem; color:var(--mute); margin:0 0 12px; }}
   .title {{ text-align:center; font-size:clamp(2.2rem,8vw,3.2rem); line-height:1.05;
     letter-spacing:.06em; margin:0; font-weight:700; color:var(--accent2); }}
-  .rule {{ display:flex; align-items:center; justify-content:center; gap:12px; margin:24px auto; }}
+  .rule {{ display:flex; align-items:center; justify-content:center; gap:12px; margin:26px auto; }}
   .rule .l {{ height:1px; width:60px; background:{palette.rgba(theme.accent2, 0.6)}; }}
   .rule .d {{ width:7px; height:7px; background:var(--accent2); transform:rotate(45deg); }}
   .subtitle {{ text-align:center; font-style:italic; font-size:1.12rem; margin:.4em 0 0; }}

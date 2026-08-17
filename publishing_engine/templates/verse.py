@@ -9,30 +9,41 @@ from __future__ import annotations
 
 import os
 
-from reportlab.lib.enums import TA_JUSTIFY
+from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY
 from reportlab.lib.styles import ParagraphStyle
+from reportlab.lib.utils import ImageReader
 from reportlab.pdfgen import canvas as pdfcanvas
 from reportlab.platypus import Paragraph
 
+from .. import figures as figure_source
 from .. import fonts
 from ..markup import to_html, to_reportlab
 from ..page import DoubleRule, Sheet
 from ..sources.verse import parse
-from . import html_base
+from . import figure, html_base
 
 #: Width of the hanging gutter the entry number sits in.
 GUTTER = 18
+#: A figure is never allowed to take more than this share of the page height.
+MAX_FIGURE_HEIGHT = 0.52
 
 
-def build_pdf(book, dist_dir, render_dir=None):
+def build_pdf(book, dist_dir, render_dir):
     fonts.register(book.raw.get("fonts"))
     sections = parse(book.content_path)
+    figures = figure_source.for_book(book)
+    for i, block in enumerate(b for s in sections for b in s["entries"]
+                              if isinstance(b, dict)):
+        block["png"] = figure.rasterise(block, book, figures, render_dir, i)
     theme = book.theme
 
     ink = fonts.color(theme.ink)
     accent = fonts.color(theme.accent)
     mono_ink = f"#{theme.mono_ink}"
 
+    caption_style = ParagraphStyle(
+        "caption", fontName=fonts.SERIF_I, fontSize=9, leading=12,
+        textColor=fonts.color(theme.caption_ink), alignment=TA_CENTER)
     entry_style = ParagraphStyle(
         "entry", fontName=fonts.SERIF, fontSize=11.5, leading=17, textColor=ink,
         alignment=TA_JUSTIFY, spaceAfter=8,
@@ -60,9 +71,11 @@ def build_pdf(book, dist_dir, render_dir=None):
             sheet.broken_rule(sheet.tw / 2, sheet.y - 19)
             sheet.y -= 38
 
+        def markup(text):
+            return to_reportlab(text, mono=fonts.MONO, mono_color=mono_ink)
+
         def entry(number, text):
-            para = Paragraph(to_reportlab(text, mono=fonts.MONO, mono_color=mono_ink),
-                             entry_style, bulletText=str(number))
+            para = Paragraph(markup(text), entry_style, bulletText=str(number))
             _, height = para.wrap(sheet.cw, sheet.th)
             sheet.ensure(height + entry_style.spaceAfter)
             para.drawOn(c, sheet.margin, sheet.y - height)
@@ -74,8 +87,19 @@ def build_pdf(book, dist_dir, render_dir=None):
         for section in sections:
             if section["name"]:
                 heading(section["name"])
-            for i, text in enumerate(section["entries"], 1):
-                entry(i, text)
+            number = 0
+            for item in section["entries"]:
+                if isinstance(item, dict):
+                    if item["full"]:
+                        sheet.close()
+                        sheet.bleed_page(ImageReader(item["png"]))
+                        sheet.open()
+                    else:
+                        figure.place(sheet, item["png"], item["caption"], caption_style,
+                                     markup, MAX_FIGURE_HEIGHT)
+                else:
+                    number += 1
+                    entry(number, item)
         sheet.close()
 
         sheet.colophon(book)
@@ -91,6 +115,7 @@ def build_pdf(book, dist_dir, render_dir=None):
 
 
 EXTRA_CSS = """
+  .rule { margin:22px auto; }   /* entries sit closer together than flowing prose */
   section.entries { margin:48px 0; }
   h2 { text-align:center; font-size:1.2rem; letter-spacing:.2em; text-transform:uppercase;
     color:var(--accent); font-weight:700; margin:0 0 6px; }
@@ -104,15 +129,28 @@ EXTRA_CSS = """
 """
 
 
+def _relative(src):
+    """Content paths are relative to the book; the HTML is written one level down."""
+    if src.startswith(("http://", "https://", "/", "../")):
+        return src
+    return "../" + src
+
+
 def build_html(book, dist_dir):
     sections = parse(book.content_path)
+    figures = figure_source.for_book(book)
     parts = []
     for section in sections:
-        entries = "".join(
-            f'<p class="entry"><span class="n">{i}</span>{to_html(text)}</p>'
-            for i, text in enumerate(section["entries"], 1))
+        rendered, number = [], 0
+        for item in section["entries"]:
+            if isinstance(item, dict):
+                rendered.append(figure.html(item, figures, _relative))
+            else:
+                number += 1
+                rendered.append(
+                    f'<p class="entry"><span class="n">{number}</span>{to_html(item)}</p>')
         head = f'<h2>{section["name"]}</h2>' if section["name"] else ""
-        parts.append(f'<section class="entries">{head}{entries}</section>')
+        parts.append(f'<section class="entries">{head}{"".join(rendered)}</section>')
 
     out = os.path.join(dist_dir, f"{book.slug}-interior.html")
     with open(out, "w", encoding="utf-8") as fh:

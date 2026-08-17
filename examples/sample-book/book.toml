@@ -57,6 +57,28 @@ backdrop = "10160f"
 [epigraph]
 lines = ["A bed you can reach across is a bed you will actually weed."]
 
+# A figure the engine draws, referred to from content as ![Caption](plot:radish).
+# Set kind = "plot" instead for curves from expressions.
+[[figure]]
+name    = "radish"
+kind    = "chart"
+x       = ["wk 1", "wk 2", "wk 3", "wk 4", "wk 5", "wk 6", "wk 7", "wk 8"]
+ylabel  = "roots worth eating"
+title   = "One sowing against four"
+aspect  = 1.75
+
+[[figure.series]]
+type   = "bar"
+values = [0, 0, 48, 12, 0, 0, 0, 0]
+label  = "sown all at once"
+
+[[figure.series]]
+type   = "line"
+values = [0, 0, 12, 12, 11, 12, 10, 9]
+label  = "sown a fortnight apart"
+color  = "accent2"
+points = true
+
 [description]
 body = """
 Four square metres, dug in a cold spring, and a season spent finding out what that is

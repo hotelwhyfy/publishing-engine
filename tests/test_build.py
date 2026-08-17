@@ -54,6 +54,19 @@ def test_it_writes_reading_html(built):
     assert "../art/the-bed.svg" in html    # rewritten relative to dist/
 
 
+def test_a_declared_figure_is_drawn_into_both_editions(built):
+    """The example declares a chart in its config and refers to it from content."""
+    result, target = built
+    html = open(result.html, encoding="utf-8").read()
+    assert "<svg" in html                  # embedded, not linked
+    assert "sown all at once" in html      # the series label the config gave it
+
+    pymupdf = pytest.importorskip("pymupdf")
+    interior = next(p for p in result.pdfs if p.endswith("kitchen-garden-interior.pdf"))
+    document = pymupdf.open(interior)
+    assert sum(len(page.get_images()) for page in document) >= 2  # the SVG and the chart
+
+
 def test_it_writes_the_listing(built):
     result, _ = built
     text = open(result.description, encoding="utf-8").read()

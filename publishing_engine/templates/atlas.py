@@ -18,7 +18,7 @@ from reportlab.lib.utils import ImageReader
 from reportlab.pdfgen import canvas as pdfcanvas
 from reportlab.platypus import Frame, Paragraph
 
-from .. import figures as figure_loader
+from .. import figures as figure_source
 from .. import fonts, numbers, raster
 from ..markup import paragraphs, to_html, to_reportlab
 from ..page import CornerMarks, Sheet
@@ -66,7 +66,7 @@ def _render_figures(book, figures, render_dir):
 
 def build_pdf(book, dist_dir, render_dir):
     fonts.register(book.raw.get("fonts"))
-    figures = figure_loader.load(book.graphs, book.dir)
+    figures = figure_source.for_book(book)
     theme = book.theme
     entries = entries_of(book)
     parts = parts_of(book)
@@ -355,7 +355,7 @@ EXTRA_CSS = """
 
 
 def build_html(book, dist_dir):
-    figures = figure_loader.load(book.graphs, book.dir)
+    figures = figure_source.for_book(book)
     parts = parts_of(book)
     by_part = {}
     for entry in entries_of(book):

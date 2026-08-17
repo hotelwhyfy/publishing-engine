@@ -15,35 +15,29 @@ from reportlab.lib.utils import ImageReader
 from reportlab.pdfgen import canvas as pdfcanvas
 from reportlab.platypus import Paragraph
 
-from .. import fonts, raster
+from .. import figures as figure_source
+from .. import fonts
 from ..markup import to_html, to_reportlab
 from ..page import DoubleRule, Sheet
 from ..sources.prose import parse
-from . import html_base
+from . import figure, html_base
 
 #: A figure is never allowed to take more than this share of the page height.
 MAX_FIGURE_HEIGHT = 0.52
 
 
-def _prepare_images(blocks, book, render_dir):
+def _prepare_images(blocks, book, figures, render_dir):
     """Rasterise each image once, at the resolution its placement needs."""
     for i, block in enumerate(blocks):
-        if block["type"] != "image":
-            continue
-        src = block["src"]
-        path = src if os.path.isabs(src) else os.path.join(book.dir, src)
-        out = os.path.join(render_dir, f"image-{i}.png")
-        if block["full"]:
-            # stretched to fill the page, so it is rendered at the page's own proportion
-            block["png"] = raster.prepare(path, out, width=1600, height=2576)
-        else:
-            block["png"] = raster.prepare(path, out, width=1400)
+        if block["type"] == "image":
+            block["png"] = figure.rasterise(block, book, figures, render_dir, i)
 
 
 def build_pdf(book, dist_dir, render_dir):
     fonts.register(book.raw.get("fonts"))
     blocks = parse(book.content_path)
-    _prepare_images(blocks, book, render_dir)
+    figures = figure_source.for_book(book)
+    _prepare_images(blocks, book, figures, render_dir)
     theme = book.theme
 
     ink = fonts.color(theme.ink)
@@ -136,32 +130,9 @@ def build_pdf(book, dist_dir, render_dir):
             sheet.diamond(sheet.tw / 2, sheet.y, 3.2)
             sheet.y -= 20
 
-        def figure(block):
-            reader = ImageReader(block["png"])
-            iw, ih = reader.getSize()
-            aspect = iw / float(ih)
-            width = sheet.cw
-            height = width / aspect
-            if height > MAX_FIGURE_HEIGHT * sheet.th:
-                height = MAX_FIGURE_HEIGHT * sheet.th
-                width = height * aspect
-
-            caption_height = 0
-            if block["caption"]:
-                cap = Paragraph(markup(block["caption"]), caption_style)
-                _, caption_height = cap.wrap(sheet.cw, 60)
-
-            sheet.ensure(height + (caption_height + 6 if caption_height else 0) + 12)
-            sheet.y -= 6
-            c.drawImage(reader, (sheet.tw - width) / 2, sheet.y - height,
-                        width=width, height=height, preserveAspectRatio=True, mask="auto")
-            sheet.y -= height
-            if block["caption"]:
-                cap = Paragraph(markup(block["caption"]), caption_style)
-                _, ch = cap.wrap(sheet.cw, 60)
-                cap.drawOn(c, sheet.margin, sheet.y - 6 - ch)
-                sheet.y -= 6 + ch
-            sheet.y -= 8
+        def draw_figure(block):
+            figure.place(sheet, block["png"], block["caption"], caption_style,
+                         markup, MAX_FIGURE_HEIGHT)
 
         sheet.title_page(book)
 
@@ -175,7 +146,7 @@ def build_pdf(book, dist_dir, render_dir):
                     sheet.bleed_page(ImageReader(block["png"]))
                     sheet.open()
                 else:
-                    figure(block)
+                    draw_figure(block)
             elif kind == "heading":
                 heading(block["text"], reserve(nxt))
             elif kind == "subheading":
@@ -229,6 +200,7 @@ def _relative(src):
 
 def build_html(book, dist_dir):
     blocks = parse(book.content_path)
+    figures = figure_source.for_book(book)
     parts = []
     for block in blocks:
         kind = block["type"]
@@ -243,13 +215,7 @@ def build_html(book, dist_dir):
         elif kind == "break":
             parts.append(html_base.RULE)
         elif kind == "image":
-            src = _relative(block["src"])
-            if block["full"]:
-                parts.append(f'<figure class="plate"><img src="{src}" alt=""></figure>')
-            else:
-                caption = (f'<figcaption>{to_html(block["caption"])}</figcaption>'
-                           if block["caption"] else "")
-                parts.append(f'<figure><img src="{src}" alt="{block["caption"]}">{caption}</figure>')
+            parts.append(figure.html(block, figures, _relative))
 
     out = os.path.join(dist_dir, f"{book.slug}-interior.html")
     with open(out, "w", encoding="utf-8") as fh:
