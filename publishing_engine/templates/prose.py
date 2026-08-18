@@ -54,6 +54,11 @@ def build_pdf(book, dist_dir, render_dir):
     caption_style = ParagraphStyle(
         "caption", fontName=fonts.SERIF_I, fontSize=9, leading=12,
         textColor=caption_ink, alignment=TA_CENTER)
+    # list items hang: the marker sits in its own gutter and every line of the item,
+    # first and continuation alike, starts at the same left edge
+    item_style = ParagraphStyle(
+        "item", parent=body_style, leftIndent=18, bulletIndent=4, spaceAfter=5,
+        bulletFontName=fonts.SERIF, bulletFontSize=10.5, bulletColor=accent)
 
     #: lines of body a heading must be able to keep with it
     orphan = 3 * body_style.leading
@@ -87,6 +92,9 @@ def build_pdf(book, dist_dir, render_dir):
                 return 30 + orphan
             if kind == "image":
                 return 0 if nxt["full"] else orphan
+            if kind == "list":                 # keep the heading with its first item
+                first = Paragraph(markup(nxt["items"][0]), item_style)
+                return min(first.wrap(sheet.cw - item_style.leftIndent, sheet.th)[1], orphan)
             return orphan
 
         def heading(text, keep=0):
@@ -130,11 +138,22 @@ def build_pdf(book, dist_dir, render_dir):
             sheet.diamond(sheet.tw / 2, sheet.y, 3.2)
             sheet.y -= 20
 
+        def bullet_list(block):
+            for index, text in enumerate(block["items"], 1):
+                marker = f"{index}." if block["ordered"] else "\u2022"
+                para = Paragraph(markup(text), item_style, bulletText=marker)
+                _, height = para.wrap(sheet.cw, sheet.th)
+                sheet.ensure(height + item_style.spaceAfter)
+                para.drawOn(c, sheet.margin, sheet.y - height)
+                sheet.y -= height + item_style.spaceAfter
+            sheet.y -= 4
+
         def draw_figure(block):
             figure.place(sheet, block["png"], block["caption"], caption_style,
                          markup, MAX_FIGURE_HEIGHT)
 
         sheet.title_page(book)
+        sheet.copyright_page(book.raw.get("copyright", {}).get("lines"))
 
         sheet.open()
         for i, block in enumerate(blocks):
@@ -155,6 +174,8 @@ def build_pdf(book, dist_dir, render_dir):
                 paragraph(quote_style, block["text"], split=False)
             elif kind == "break":
                 section_break()
+            elif kind == "list":
+                bullet_list(block)
             else:
                 paragraph(body_style, block["text"])
         sheet.close()
@@ -183,6 +204,9 @@ EXTRA_CSS = """
   p { margin:.7em 0; text-align:justify; hyphens:auto; orphans:3; widows:3; }
   blockquote { margin:1.2em auto; max-width:44ch; text-align:center; font-style:italic;
     font-size:1.16rem; color:var(--accent); border:0; }
+  ul, ol { margin:.7em 0 .9em; padding-left:1.5em; }
+  li { margin:.35em 0; text-align:justify; hyphens:auto; }
+  li::marker { color:var(--accent); }
   figure { margin:1.6em 0; text-align:center; }
   figure img { max-width:100%; height:auto; }
   figure.plate img { width:100%; }
@@ -214,6 +238,10 @@ def build_html(book, dist_dir):
             parts.append(f'<blockquote>{to_html(block["text"])}</blockquote>')
         elif kind == "break":
             parts.append(html_base.RULE)
+        elif kind == "list":
+            tag = "ol" if block["ordered"] else "ul"
+            items = "".join(f"<li>{to_html(t)}</li>" for t in block["items"])
+            parts.append(f"<{tag}>{items}</{tag}>")
         elif kind == "image":
             parts.append(figure.html(block, figures, _relative))
 

@@ -18,7 +18,7 @@ from __future__ import annotations
 
 from reportlab.lib.pagesizes import inch
 
-from . import fonts
+from . import fonts, numbers
 
 
 class DoubleRule:
@@ -207,8 +207,10 @@ class Sheet:
         c = self.canvas
         cx = self.tw / 2
         if book.series_label:
-            self.tracked(cx, self.th - 160, book.series_label.upper(),
-                         fonts.SERIF, 9.5, self.mute, 2.6)
+            label = book.series_label.upper()
+            if book.volume:
+                label += f"   ·   VOLUME {numbers.in_words(book.volume).upper()}"
+            self.tracked(cx, self.th - 160, label, fonts.SERIF, 9.5, self.mute, 2.6)
         c.setFillColor(self.accent2)
         c.setFont(fonts.SERIF_B, 36)
         y = self.th - 250
@@ -227,6 +229,36 @@ class Sheet:
             fonts.wrap_centred(c, cx, 168, epigraph, fonts.SERIF_I, 11, safe, anchor="bottom")
         if book.imprint:
             self.tracked(cx, 132, book.imprint.upper(), fonts.SERIF, 9.5, self.mute, 2.4)
+        self.close()
+
+    def copyright_page(self, lines):
+        """The rights page: an ornament, then the lines the book gives, centred.
+
+        A line in capitals is set as a heading, and one mentioning reserved rights is
+        set apart in italic — the two conventions of the form. An empty string is a gap.
+        """
+        if not lines:
+            return
+        self.open(folio=False)
+        c = self.canvas
+        cx = self.tw / 2
+        self.diamond(cx, self.th - 150, 4, self.accent2)
+        y = self.th - 186
+        for text in lines:
+            if not text:
+                y -= 6
+                continue
+            reserved = "rights reserved" in text.lower()
+            font = (fonts.SERIF_B if text.isupper()
+                    else (fonts.SERIF_I if reserved else fonts.SERIF))
+            color = (self.accent if text.isupper()
+                     else (self.mute if reserved else self.ink))
+            c.setFillColor(color)
+            c.setFont(font, 10.5 if text.isupper() else 10)
+            for line in fonts.wrap_lines(text, font, 10, self.safe_width()):
+                c.drawCentredString(cx, y, line)
+                y -= 14
+            y -= 2
         self.close()
 
     def colophon(self, book):

@@ -82,6 +82,7 @@ def build_pdf(book, dist_dir, render_dir):
             sheet.y -= height + entry_style.spaceAfter
 
         sheet.title_page(book)
+        sheet.copyright_page(book.raw.get("copyright", {}).get("lines"))
 
         sheet.open()
         for section in sections:
